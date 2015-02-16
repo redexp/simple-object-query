@@ -1,5 +1,7 @@
 # simple-object-query
 
+[![Build Status](https://travis-ci.org/redexp/simple-object-query.svg)](https://travis-ci.org/redexp/simple-object-query)
+
 Really simple lib with no need to learn some string query language.
 
 I'll use this source object for all examples
