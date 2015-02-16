@@ -1,0 +1,33 @@
+{
+  "name": "simple-object-query",
+  "main": "simple-object-query.js",
+  "version": "0.5.0",
+  "homepage": "https://github.com/redexp/simple-object-query",
+  "authors": [
+    "Sergii.Kliuchnyk <sergii.kliuchnyk@masterofcode.com>"
+  ],
+  "description": "simple lib with no need to learn some string query language",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "find",
+    "search",
+    "match",
+    "replace",
+    "query",
+    "get",
+    "object",
+    "json"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
