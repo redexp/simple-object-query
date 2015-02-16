@@ -1,0 +1,34 @@
+{
+  "name": "simple-object-query",
+  "version": "0.5.0",
+  "description": "Find object by query",
+  "main": "simple-object-query.js",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "mocha": "~2.0",
+    "chai": "~1.9"
+  },
+  "scripts": {
+    "test": "./node_modules/.bin/mocha -R spec ./test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/redexp/simple-object-query.git"
+  },
+  "keywords": [
+    "find",
+    "search",
+    "match",
+    "replace",
+    "query",
+    "get",
+    "object",
+    "json"
+  ],
+  "author": "Sergii Kliuchnyk",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/redexp/simple-object-query/issues"
+  }
+}
