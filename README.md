@@ -145,7 +145,7 @@ console.log(source.data[1].item.hasOwnProperty('options')); // false
 
 If your `target` is in array, it will be removed correctly
 ```javascript
-replace(source, {name: ''select});
+replace(source, {name: 'select'});
 
 console.log(source.data.length); // 1
 console.log(source.data[0].item.name); // 'group'
