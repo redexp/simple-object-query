@@ -44,7 +44,7 @@ var source = {
 var find = require('simple-object-query').find;
 
 find(source, {
-    'options.property': 'input'
+    'options.property.name': 'input'
 });
 /*
  [
@@ -55,7 +55,7 @@ find(source, {
 
 find(source, {
     'name': 'group',
-    'options.property': 'input'
+    'options.property.name': 'input'
 });
 /*
  [
@@ -85,7 +85,7 @@ var search = require('simple-object-query').search;
 search({
     source: source,
     query: {
-        'options.property': 'input'
+        'options.property.name': 'input'
     }
 });
 /*
