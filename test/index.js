@@ -1,7 +1,7 @@
 var q = require('../simple-object-query');
 var expect = require('chai').expect;
 
-var obj = {
+var obj = origin = {
     root: {
         a1: {
             b: [
@@ -83,6 +83,7 @@ describe('search', function () {
         expect(res[0].target).to.equal(obj.root.a1);
         expect(res[0].parent).to.equal(obj.root);
         expect(res[0].field).to.equal('a1');
+        expect(res[0].path).to.deep.equal(['root', 'a1']);
     });
 
     it('should not find because of type', function () {
@@ -110,11 +111,31 @@ describe('search', function () {
         expect(res[1].target).to.equal(obj.root.a2);
     });
 
+    it('should exclude recursive fields', function () {
+        var obj = clone(origin);
+
+        obj.root.a1.parent = obj.root;
+        obj.root.a1.$name.list = obj.root;
+
+        var res = q.search({
+            source: obj,
+            query: {
+                'b.0.c': 1
+            },
+            exclude: [
+                'parent',
+                '$name.list'
+            ]
+        });
+
+        expect(res.length).to.equal(2);
+        expect(res[0].target).to.equal(obj.root.a1);
+        expect(res[1].target).to.equal(obj.root.a2);
+    });
+
 });
 
 describe('replace', function () {
-
-    var origin = obj;
 
     it('should replace only one', function () {
         var num = 0;
@@ -196,6 +217,24 @@ describe('replace', function () {
 
         expect(obj.root.a1.b.length).to.equal(2);
         expect(obj.root.a1.b).to.deep.equal([{c:1}, {c:3}]);
+    });
+
+    it('should except config object', function () {
+        var obj = clone(origin);
+
+        obj.root.a1.parent = obj.root;
+
+        q.replace({
+            source: obj,
+            query: {
+                'b.0.c': 1,
+                '$name.-test': true
+            },
+            exclude: ['parent']
+        });
+
+        expect(obj.root).to.not.include.keys('a1');
+        expect(obj.root.a2).to.equal(obj.root.a2);
     });
 
 });

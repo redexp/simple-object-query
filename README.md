@@ -76,7 +76,9 @@ find(source, {
 
 ## search
 
-Difference between `find` is that it takes parameters in object and returns extended object with `parent` object and `field` string.
+Difference between `find` is that it takes parameters in object and returns extended object with `parent` object, `field` string and `path` array.
+
+**Warning:** if your input object has circular links (like `parent` fields or like `previousSibling` in DOM) then you should  set path to this fields in `exclude` array to prevent endless recursion.
 ```javascript
 var search = require('simple-object-query').search;
 
@@ -91,27 +93,37 @@ search({
   {
     parent: {item: {...}},
     field: 'item',
+    path: ['data', '0', 'item'],
     target: {name: 'select', options: {...}}
   },
   {
     parent: {item: {...}},
     field: 'item',
+    path: ['data', '1', 'item'],
     target: {name: 'group', options: {...}}
   }
  ]
 */
 
+source.data[0].item.list = source.data;
+
 search({
     source: source,
     query: {
         'length': 2
-    }
+    },
+    exclude: [
+        'list',
+        // or more specifically
+        'item.list'
+    ]
 });
 /*
  [
   {
     parent: {name: 'group', options: {...}},
     field: 'options',
+    path: ['data', '1', 'item', 'options'],
     target: {length: 2, property: {...}}
   }
  ]
@@ -124,7 +136,7 @@ This method will replace or remove (if callback will return `undefined`) target 
 ```javascript
 var replace = require('simple-object-query').replace;
 
-replace(source, {length: /\d+/}, function (target, parent, field) {
+replace(source, {length: /\d+/}, function (target, parent, field, path) {
     return target.length > 3 ? 'test' : undefined;
 });
 
@@ -155,4 +167,16 @@ replace(source, {name: 'select'});
 
 console.log(source.data.length); // 1
 console.log(source.data[0].item.name); // 'group'
+```
+
+If you need set `exclude` parameter then you should pass all parameters as object just like for `search` only with `callback` parameter
+```javascript
+replace({
+    source: source,
+    query: {length: /\d+/},
+    exclude: ['item.list']
+    callback: function (target, parent, field, path) {
+        return target.length > 3 ? 'test' : undefined;
+    }
+});
 ```

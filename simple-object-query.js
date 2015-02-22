@@ -46,6 +46,7 @@
         var res = match({
             parent: parent,
             source: obj,
+            exclude: ops.exclude ? ops.exclude.map(arrayQuery) : null,
             query: rules[0].path
         });
 
@@ -69,13 +70,24 @@
             parent = ops.parent,
             field = ops.field,
             obj = ops.source,
-            query = ops.query;
+            query = ops.query,
+            path = ops.path,
+            exclude = ops.exclude;
+
+        if (!isArray(path)) {
+            path = [];
+        }
+
+        if (exclude && isParent(path, exclude)) {
+            return list;
+        }
 
         var res = get(obj, query);
 
         if (res !== undefined) {
             list.push({
                 parent: parent,
+                path: path,
                 field: field,
                 target: obj
             });
@@ -84,12 +96,16 @@
         var val;
 
         for (var name in obj) {
+            if (!has(obj, name)) continue;
+
             val = obj[name];
 
-            if (typeof val === 'object') {
+            if (isObject(val) && val !== parent) {
                 val = match({
                     parent: obj,
                     field: name,
+                    path: add(path, name),
+                    exclude: exclude,
                     source: val,
                     query: query
                 });
@@ -113,7 +129,7 @@
         for (var i = 0, len = path.length; i < len; i++) {
             name = path[i];
 
-            if (typeof obj !== 'object' || !obj.hasOwnProperty(name)) return;
+            if (!isObject(obj) || !has(obj, name)) return;
 
             obj = obj[name];
         }
@@ -121,16 +137,29 @@
         return obj;
     }
 
-    function replace(obj, queries, func) {
-        if (typeof func !== 'function') {
-            var funcVal = func;
-            func = function () {
+    function replace(obj, query, cb) {
+        var ops;
+
+        if (arguments.length === 1) {
+            ops = obj;
+            cb = ops.callback;
+        }
+        else {
+            ops = {
+                source: obj,
+                query: query
+            };
+        }
+
+        if (typeof cb !== 'function') {
+            var funcVal = cb;
+            cb = function () {
                 return funcVal;
             };
         }
 
-        search({source: obj, query: queries}).forEach(function (item) {
-            var target = func(item.target, item.parent, item.field);
+        search(ops).forEach(function (item) {
+            var target = cb(item.target, item.parent, item.field, item.path);
 
             if (target === undefined) {
                 if (isArray(item.parent)) {
@@ -147,11 +176,15 @@
     }
 
     function arrayQuery(str) {
-        return str.split('.');
+        return typeof str === 'string' ? str.split('.') : str;
     }
 
     function keys(obj) {
         return Object.keys(obj);
+    }
+
+    function isObject(value) {
+        return value !== null && typeof value === 'object';
     }
 
     function isRegExp(value) {
@@ -160,6 +193,44 @@
 
     function isArray(value) {
         return Array.isArray(value);
+    }
+
+    function has(obj, field) {
+        return Object.prototype.hasOwnProperty.call(obj, field);
+    }
+
+    function isParent(path, fieldsList) {
+        var i, len, n, pos, fields, field, eq;
+
+        for (i = 0, len = fieldsList.length; i < len; i++) {
+            fields = fieldsList[i];
+            eq = true;
+            n = fields.length - 1;
+            pos = path.length - 1;
+
+            if (n > pos) continue;
+
+            for (; n >= 0; n--, pos--) {
+                field = fields[n];
+                if (field !== path[pos]) {
+                    eq = false;
+                    break;
+                }
+            }
+
+            if (eq) return eq;
+        }
+
+        return false;
+    }
+
+    function add(list, field) {
+        var x = [];
+        for (var i = 0, len = list.length; i < len; i++) {
+            x.push(list[i]);
+        }
+        x.push(field);
+        return x;
     }
 
 }));

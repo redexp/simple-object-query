@@ -1,7 +1,7 @@
 {
   "name": "simple-object-query",
-  "version": "0.5.0",
-  "description": "Find object by query",
+  "version": "1.0.0",
+  "description": "Find object recursively by query",
   "main": "simple-object-query.js",
   "dependencies": {
   },
@@ -23,6 +23,7 @@
     "replace",
     "query",
     "get",
+    "recursive",
     "object",
     "json"
   ],
