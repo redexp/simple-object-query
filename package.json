@@ -1,6 +1,6 @@
 {
   "name": "simple-object-query",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Find object recursively by query",
   "main": "simple-object-query.js",
   "dependencies": {

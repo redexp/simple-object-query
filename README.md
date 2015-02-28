@@ -52,9 +52,64 @@ get(source, 'data.*.item.type'); // 'number'
 ```
 Basically you will use this method only when you need a `*` because without it you can get value just with regular code.
 
+## where
+
+This is filter function for array. It will return all items which deep fields will be equal to query values. You can use regular expression to test deep field value.
+```javascript
+var where = require('simple-object-query').where;
+
+where(source.data, {
+    'item.name': /(select|group)/,
+    'item.type': 'number'
+});
+/*
+ [
+  {name: 'group', options: {...}, type: 'number'}
+ ]
+*/
+```
+You can do even more complicated query with array of queries. Items of this array can be one of three types:
+
+1. `Object` - regular query
+2. `Function` - should be map function which will return new value instead of previous result
+3. `String` - shortcut for map function with `get` function with current query string `(item) => get(item, string)`
+```javascript
+var src = {
+    root: {
+        node: [
+            {a: {b: 1}},
+            {a: {c: 2}},
+            {a: {d: 3, g: [{e: 3},{f: 4}]}},
+            {a: {d: 3, g: [{e: 5},{f: 5}]}}
+            {a: {d: 4, g: [{e: 3},{f: 4}]}}
+            {a: {d: 4, g: [{e: 5},{f: 5}]}}
+        ]
+    }
+};
+
+var q = require('simple-object-query),
+    _ = require('underscore');
+
+q.where(src.root.node, [
+    {
+        'a.d': 3
+    },
+    'a.g',
+    _.flatten, // or lite version (single level) analog q.flatten
+    {
+        'e': 5
+    }
+]);
+/*
+ [
+  {e: 5}
+ ]
+*/
+```
+
 ## find
 
-This function will find a deep object which has deep fields as in query object and their values is equal to values from query object. As values in query object you can use regular expressions.
+This function will recursively find a deep object which has deep fields as in query object and their values are equal to values from query object. As values in query object you can use regular expressions.
 
 ```javascript
 var find = require('simple-object-query').find;

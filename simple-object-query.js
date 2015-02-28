@@ -22,12 +22,40 @@
         search: search,
         match: match,
         get: get,
-        replace: replace
+        where: where,
+        replace: replace,
+        flatten: flatten
     };
 
     function find(obj, query) {
-        return search({source: obj, query: query}).map(function (item) {
-            return item.target;
+        return search({source: obj, query: query}).map(itemTarget);
+    }
+
+    function where(arr, query) {
+        if (isArray(query)) {
+            var q;
+            for (var i = 0, len = query.length; i < len; i++) {
+                q = query[i];
+
+                switch (typeof q) {
+                    case 'string':
+                        arr = arr.map(function (obj) {
+                            return get(obj, q);
+                        });
+                        break;
+                    case 'function':
+                        arr = q(arr);
+                        break;
+                    default:
+                        arr = where(arr, q);
+                }
+            }
+
+            return arr;
+        }
+
+        return arr.filter(function (obj) {
+            return search({source: obj, query: query, recursion: false}).length > 0;
         });
     }
 
@@ -47,7 +75,8 @@
             parent: parent,
             source: obj,
             exclude: ops.exclude ? ops.exclude.map(arrayQuery) : null,
-            query: rules[0].path
+            query: rules[0].path,
+            recursion: ops.recursion
         });
 
         var helpers = search.helpers;
@@ -72,7 +101,8 @@
             obj = ops.source,
             query = ops.query,
             path = ops.path,
-            exclude = ops.exclude;
+            exclude = ops.exclude,
+            recursion = ops.recursion;
 
         if (!isArray(path)) {
             path = [];
@@ -95,23 +125,25 @@
 
         var val;
 
-        for (var name in obj) {
-            if (!has(obj, name)) continue;
+        if (recursion !== false) {
+            for (var name in obj) {
+                if (!has(obj, name)) continue;
 
-            val = obj[name];
+                val = obj[name];
 
-            if (isObject(val) && val !== parent) {
-                val = match({
-                    parent: obj,
-                    field: name,
-                    path: add(path, name),
-                    exclude: exclude,
-                    source: val,
-                    query: query
-                });
+                if (isObject(val) && val !== parent) {
+                    val = match({
+                        parent: obj,
+                        field: name,
+                        path: add(path, name),
+                        exclude: exclude,
+                        source: val,
+                        query: query
+                    });
 
-                if (val.length) {
-                    list = list.concat(val);
+                    if (val.length) {
+                        list = list.concat(val);
+                    }
                 }
             }
         }
@@ -129,7 +161,7 @@
         for (var i = 0, len = path.length; i < len; i++) {
             name = path[i];
 
-            if (name === '*' && i < len && isArray(obj)) {
+            if (name === '*' && i < len - 1 && isArray(obj)) {
                 name = path[++i];
                 var restPath = path.slice(i);
                 for (var n = 0, size = obj.length; n < size; n++) {
@@ -190,6 +222,10 @@
         });
     }
 
+    function flatten(list) {
+        return Array.prototype.concat.apply([], list);
+    }
+
     function arrayQuery(str) {
         return typeof str === 'string' ? str.split('.') : str;
     }
@@ -246,6 +282,10 @@
         }
         x.push(field);
         return x;
+    }
+
+    function itemTarget(item) {
+        return item.target;
     }
 
 }));

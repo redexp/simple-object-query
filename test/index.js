@@ -1,6 +1,19 @@
 var q = require('../simple-object-query');
 var expect = require('chai').expect;
 
+var src = {
+    root: {
+        node: [
+            {a: {b: 1}},
+            {a: {c: 2}},
+            {a: {c: 2, d: 0}},
+            {a: {c: 5}},
+            {a: {d: [{e: 3},{f: 4}], t: 'a'}},
+            {a: {d: [{e: 5},{f: 4}], t: 'a'}}
+        ]
+    }
+};
+
 var obj = origin = {
     root: {
         a1: {
@@ -28,17 +41,70 @@ function clone(val) {
 
 describe('get', function () {
     it('should get with * in arrays', function () {
-        var obj = {
-            root: {
-                node: [
-                    {a: {b: 1}},
-                    {a: {c: 2}},
-                    {a: {d: 3}}
-                ]
-            }
-        };
+        var obj = src;
+        var arr = [obj];
 
         expect(q.get(obj, 'root.node.*.a.c')).to.equal(2);
+        expect(q.get(obj, 'root.node.*.a.d.*.e')).to.equal(3);
+        expect(q.get(arr, '*.root.node.*.a.b')).to.equal(1);
+    });
+});
+
+describe('where', function () {
+    it('should get object from array by query not recursively', function () {
+        var obj = src;
+
+        var res = q.where(obj.root.node, {
+            'a.c': 2
+        });
+
+        expect(res.length).to.equal(2);
+        expect(res[0]).to.equal(obj.root.node[1]);
+        expect(res[1]).to.equal(obj.root.node[2]);
+
+        res = q.where(obj.root.node, {
+            'a.c': /\d+/
+        });
+
+        expect(res.length).to.equal(3);
+        expect(res[0]).to.equal(obj.root.node[1]);
+        expect(res[1]).to.equal(obj.root.node[2]);
+        expect(res[2]).to.equal(obj.root.node[3]);
+
+        res = q.where(obj.root.node, {
+            'a.d.*.e': 3
+        });
+
+        expect(res.length).to.equal(1);
+        expect(res[0]).to.equal(obj.root.node[4]);
+
+        res = q.where(obj.root.node, [
+            {
+                'a.d.*.f': 4
+            }
+        ]);
+
+        expect(res.length).to.equal(2);
+        expect(res[0]).to.equal(obj.root.node[4]);
+        expect(res[1]).to.equal(obj.root.node[5]);
+    });
+
+    it ('should accept query as array', function () {
+        var obj = src;
+
+        var res = q.where(obj.root.node, [
+            {
+                'a.t': 'a'
+            },
+            'a.d',
+            q.flatten,
+            {
+                'e': 5
+            }
+        ]);
+
+        expect(res.length).to.equal(1);
+        expect(res[0]).to.equal(obj.root.node[5].a.d[0]);
     });
 });
 
