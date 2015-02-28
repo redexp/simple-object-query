@@ -6,7 +6,7 @@
 
 `bower install simple-object-query`
 
-Really simple lib with no need to learn some string query language.
+Really simple lib to find a deep value in an object
 
 I'll use this source object for all examples
 ```javascript
@@ -31,14 +31,30 @@ var source = {
                     property: {
                         name: 'input'
                     }
-                }
+                },
+                type: 'number'
             }
         }
     ]
 };
 ```
 
+## get
+
+This function will return value of deep field if it is own property. You can use `*` if you don't know exact index in array.
+
+```javascript
+var get = require('simple-object-query').get;
+
+get(source, 'data.*.item.name'); // 'select'
+get(source, 'data.1.item.name'); // 'group'
+get(source, 'data.*.item.type'); // 'number'
+```
+Basically you will use this method only when you need a `*` because without it you can get value just with regular code.
+
 ## find
+
+This function will find a deep object which has deep fields as in query object and their values is equal to values from query object. As values in query object you can use regular expressions.
 
 ```javascript
 var find = require('simple-object-query').find;
@@ -76,7 +92,7 @@ find(source, {
 
 ## search
 
-Difference between `find` is that it takes parameters in object and returns extended object with `parent` object, `field` string and `path` array.
+Difference between `find` is that it takes parameters as object and returns extended object with `parent` object, `field` string and `path` array.
 
 **Warning:** if your input object has circular links (like `parent` fields or like `previousSibling` in DOM) then you should  set path to this fields in `exclude` array to prevent endless recursion.
 ```javascript

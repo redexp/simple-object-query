@@ -129,6 +129,21 @@
         for (var i = 0, len = path.length; i < len; i++) {
             name = path[i];
 
+            if (name === '*' && i < len && isArray(obj)) {
+                name = path[++i];
+                var restPath = path.slice(i);
+                for (var n = 0, size = obj.length; n < size; n++) {
+                    if (has(obj[n], name)) {
+                        var res = get(obj[n], restPath);
+                        if (typeof res !== 'undefined') {
+                            return res;
+                        }
+                    }
+                }
+
+                return;
+            }
+
             if (!isObject(obj) || !has(obj, name)) return;
 
             obj = obj[name];

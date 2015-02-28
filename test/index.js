@@ -26,6 +26,22 @@ function clone(val) {
     return JSON.parse(JSON.stringify(val));
 }
 
+describe('get', function () {
+    it('should get with * in arrays', function () {
+        var obj = {
+            root: {
+                node: [
+                    {a: {b: 1}},
+                    {a: {c: 2}},
+                    {a: {d: 3}}
+                ]
+            }
+        };
+
+        expect(q.get(obj, 'root.node.*.a.c')).to.equal(2);
+    });
+});
+
 describe('find', function () {
 
     it('should find only one', function () {
