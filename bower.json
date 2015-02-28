@@ -1,7 +1,7 @@
 {
   "name": "simple-object-query",
   "main": "simple-object-query.js",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "homepage": "https://github.com/redexp/simple-object-query",
   "authors": [
     "Sergii.Kliuchnyk <sergii.kliuchnyk@masterofcode.com>"

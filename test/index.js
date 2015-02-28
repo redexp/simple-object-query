@@ -106,6 +106,22 @@ describe('where', function () {
         expect(res.length).to.equal(1);
         expect(res[0]).to.equal(obj.root.node[5].a.d[0]);
     });
+
+    it('should return empty array if not find', function () {
+        var obj = src;
+
+        var res = q.where(obj.root.node, [
+            {
+                'a.t': 'a'
+            },
+            'a.d.c',
+            {
+                'e': 5
+            }
+        ]);
+
+        expect(res.length).to.equal(0);
+    });
 });
 
 describe('find', function () {

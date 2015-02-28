@@ -32,6 +32,8 @@
     }
 
     function where(arr, query) {
+        if (arr.length === 0) return arr;
+
         if (isArray(query)) {
             var q;
             for (var i = 0, len = query.length; i < len; i++) {
@@ -41,7 +43,7 @@
                     case 'string':
                         arr = arr.map(function (obj) {
                             return get(obj, q);
-                        });
+                        }).filter(notUndefined);
                         break;
                     case 'function':
                         arr = q(arr);
@@ -286,6 +288,10 @@
 
     function itemTarget(item) {
         return item.target;
+    }
+
+    function notUndefined(item) {
+        return typeof item !== 'undefined';
     }
 
 }));
