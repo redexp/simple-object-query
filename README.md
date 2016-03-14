@@ -87,7 +87,7 @@ var src = {
     }
 };
 
-var q = require('simple-object-query),
+var q = require('simple-object-query'),
     _ = require('underscore');
 
 q.where(src.root.node, [
