@@ -80,8 +80,8 @@ var src = {
             {a: {b: 1}},
             {a: {c: 2}},
             {a: {d: 3, g: [{e: 3},{f: 4}]}},
-            {a: {d: 3, g: [{e: 5},{f: 5}]}}
-            {a: {d: 4, g: [{e: 3},{f: 4}]}}
+            {a: {d: 3, g: [{e: 5},{f: 5}]}},
+            {a: {d: 4, g: [{e: 3},{f: 4}]}},
             {a: {d: 4, g: [{e: 5},{f: 5}]}}
         ]
     }
@@ -102,7 +102,7 @@ q.where(src.root.node, [
 ]);
 /*
  [
-  {e: 5}
+  {a: {d: 3, g: [{e: 5},{f: 5}]}}
  ]
 */
 ```
@@ -245,7 +245,7 @@ If you need set `exclude` parameter then you should pass all parameters as objec
 replace({
     source: source,
     query: {length: /\d+/},
-    exclude: ['item.list']
+    exclude: ['item.list'],
     callback: function (target, parent, field, path) {
         return target.length > 3 ? 'test' : undefined;
     }

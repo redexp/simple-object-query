@@ -6,7 +6,7 @@
     } else {
         root.simpleObjectQuery = factory();
     }
-}(this, function () {
+}(this, function (undefined) {
 
     search.helpers = {
         equal: function (a, b) {
@@ -64,7 +64,12 @@
     function search(ops) {
         var parent = ops.parent,
             obj = ops.source,
-            queries = ops.query;
+            queries = ops.query,
+            list = [],
+            callback = ops.callback || function (item) {
+                list.push(item);
+            },
+            helpers = search.helpers;
 
         var rules = keys(queries).map(function (query) {
             return {
@@ -73,27 +78,28 @@
             }
         });
 
-        var res = match({
+        match({
             parent: parent,
             source: obj,
             exclude: ops.exclude ? ops.exclude.map(arrayQuery) : null,
             query: rules[0].path,
-            recursion: ops.recursion
+            recursion: ops.recursion,
+            callback: function (item) {
+                var valid = rules.every(function (rule) {
+                    var helper = helpers.equal;
+
+                    if (isRegExp(rule.value)) {
+                        helper = helpers.regexp;
+                    }
+
+                    return helper(get(item.target, rule.path), rule.value);
+                });
+
+                if (valid) callback(item);
+            }
         });
 
-        var helpers = search.helpers;
-
-        return res.filter(function (item) {
-            return rules.every(function (rule) {
-                var helper = helpers.equal;
-
-                if (isRegExp(rule.value)) {
-                    helper = helpers.regexp;
-                }
-
-                return helper(get(item.target, rule.path), rule.value);
-            });
-        });
+        return list;
     }
 
     function match(ops) {
@@ -104,7 +110,10 @@
             query = ops.query,
             path = ops.path,
             exclude = ops.exclude,
-            recursion = ops.recursion;
+            recursion = ops.recursion,
+            callback = ops.callback || function (item) {
+                list.push(item);
+            };
 
         if (!isArray(path)) {
             path = [];
@@ -117,7 +126,7 @@
         var res = get(obj, query);
 
         if (res !== undefined) {
-            list.push({
+            callback({
                 parent: parent,
                 path: path,
                 field: field,
@@ -140,12 +149,9 @@
                         path: add(path, name),
                         exclude: exclude,
                         source: val,
-                        query: query
+                        query: query,
+                        callback: callback
                     });
-
-                    if (val.length) {
-                        list = list.concat(val);
-                    }
                 }
             }
         }
@@ -207,7 +213,7 @@
             };
         }
 
-        search(ops).forEach(function (item) {
+        ops.callback = function (item) {
             var target = cb(item.target, item.parent, item.field, item.path);
 
             if (target === undefined) {
@@ -221,7 +227,9 @@
             else {
                 item.parent[item.field] = target;
             }
-        });
+        };
+
+        search(ops);
     }
 
     function flatten(list) {
