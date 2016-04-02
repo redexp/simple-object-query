@@ -286,12 +286,7 @@
     }
 
     function add(list, field) {
-        var x = [];
-        for (var i = 0, len = list.length; i < len; i++) {
-            x.push(list[i]);
-        }
-        x.push(field);
-        return x;
+        return [].concat(list, field);
     }
 
     function itemTarget(item) {
