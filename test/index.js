@@ -40,13 +40,20 @@ function clone(val) {
 }
 
 describe('get', function () {
-    it('should get with * in arrays', function () {
+    it('should get value by * in arrays', function () {
         var obj = src;
         var arr = [obj];
 
         expect(q.get(obj, 'root.node.*.a.c')).to.equal(2);
         expect(q.get(obj, 'root.node.*.a.d.*.e')).to.equal(3);
+        expect(q.get(obj, 'root.node.*')).to.equal(obj.root.node[0]);
         expect(q.get(arr, '*.root.node.*.a.b')).to.equal(1);
+    });
+
+    it('should get value by * in objects', function () {
+        expect(q.get(obj, 'root.*.b')).to.equal(obj.root.a1.b);
+        expect(q.get(obj, 'root.*.b.*.c')).to.equal(1);
+        expect(q.get(obj, 'root.*')).to.equal(obj.root.a1);
     });
 });
 
@@ -224,6 +231,24 @@ describe('search', function () {
                 'parent',
                 '$name.list'
             ]
+        });
+
+        expect(res.length).to.equal(2);
+        expect(res[0].target).to.equal(obj.root.a1);
+        expect(res[1].target).to.equal(obj.root.a2);
+    });
+
+    it('should filter by function', function () {
+        var obj = clone(origin);
+
+        var res = q.search({
+            source: obj,
+            query: {
+                '*': function (val) {
+                    expect(this.path).to.be.an('array');
+                    return Array.isArray(val);
+                }
+            }
         });
 
         expect(res.length).to.equal(2);

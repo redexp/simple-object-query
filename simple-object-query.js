@@ -13,7 +13,7 @@
             return a === b;
         },
         regexp: function (val, rule) {
-            return rule.test(val);
+            return val === rule || rule.test(val);
         }
     };
 
@@ -72,9 +72,21 @@
             helpers = search.helpers;
 
         var rules = keys(queries).map(function (query) {
+            var path = arrayQuery(query),
+                value = queries[query],
+                validator = helpers.equal;
+
+            if (isRegExp(value)) {
+                validator = helpers.regexp;
+            }
+            else if (typeof value === 'function') {
+                validator = value;
+            }
+
             return {
-                path: arrayQuery(query),
-                value: queries[query]
+                path: path,
+                value: value,
+                validator: validator
             }
         });
 
@@ -86,13 +98,7 @@
             recursion: ops.recursion,
             callback: function (item) {
                 var valid = rules.every(function (rule) {
-                    var helper = helpers.equal;
-
-                    if (isRegExp(rule.value)) {
-                        helper = helpers.regexp;
-                    }
-
-                    return helper(get(item.target, rule.path), rule.value);
+                    return rule.validator(get(item.target, rule.path), rule.value);
                 });
 
                 if (valid) callback(item);
@@ -138,7 +144,7 @@
 
         if (recursion !== false) {
             for (var name in obj) {
-                if (!has(obj, name)) continue;
+                if (!obj.hasOwnProperty(name)) continue;
 
                 val = obj[name];
 
@@ -169,19 +175,16 @@
         for (var i = 0, len = path.length; i < len; i++) {
             name = path[i];
 
-            if (name === '*' && i < len - 1 && isArray(obj)) {
-                name = path[++i];
-                var restPath = path.slice(i);
-                for (var n = 0, size = obj.length; n < size; n++) {
-                    if (has(obj[n], name)) {
-                        var res = get(obj[n], restPath);
-                        if (typeof res !== 'undefined') {
-                            return res;
-                        }
-                    }
+            if (name === '*') {
+                var restPath = path.slice(i + 1);
+
+                if (restPath.length === 0) {
+                    return first(obj);
                 }
 
-                return;
+                return each(obj, function (item) {
+                    return get(item, restPath);
+                });
             }
 
             if (!isObject(obj) || !has(obj, name)) return;
@@ -242,6 +245,35 @@
 
     function keys(obj) {
         return Object.keys(obj);
+    }
+
+    function each(obj, cb) {
+        var res;
+
+        if (isArray(obj)) {
+            for (var i = 0, len = obj.length; i < len; i++) {
+                res = cb(obj[i], i);
+                if (typeof res !== 'undefined') {
+                    return res;
+                }
+            }
+        }
+        else {
+            for (var field in obj) {
+                if (!obj.hasOwnProperty(field)) continue;
+
+                res = cb(obj[field], field);
+                if (typeof res !== 'undefined') {
+                    return res;
+                }
+            }
+        }
+    }
+
+    function first(obj) {
+        return each(obj, function (val) {
+            return val;
+        });
     }
 
     function isObject(value) {
