@@ -64,7 +64,13 @@ where(source.data, {
 });
 /*
  [
-  {name: 'group', options: {...}, type: 'number'}
+   {
+        item: {
+            name: 'group',
+            options: {...},
+            type: 'number'
+        }
+    }
  ]
 */
 ```
@@ -73,6 +79,7 @@ You can do even more complicated query with array of queries. Items of this arra
 1. `Object` - regular query
 2. `Function` - should be map function which will return new value instead of previous result
 3. `String` - shortcut for map function with `get` function with current query string `(item) => get(item, string)`
+
 ```javascript
 var src = {
     root: {
@@ -147,7 +154,25 @@ find(source, {
 
 ## search
 
-Difference between `find` is that it takes parameters as object and returns extended object with `parent` object, `field` string and `path` array.
+Difference between `find` is that it takes parameters as object of type
+```javascript
+{
+    source: object,
+    query: object, // same object as for "find"
+    exclude: array, // array of names of properties which are links to other objects in source (circular links)
+    recursion: true, // deep search or not
+    callback: function (object) {} // optional callback for each found target
+}
+```
+If you will not set callback then `search` will return array of objects of next type
+```javascript
+{
+    parent: object, // link to parent object
+    field: 'string', // name of parent property of target object
+    target: object, // searched object
+    path: ['path', 'to', 'object'] // this path means that target is in source.path.to.object property
+}
+```
 
 **Warning:** if your input object has circular links (like `parent` fields or like `previousSibling` in DOM) then you should  set path to this fields in `exclude` array to prevent endless recursion.
 ```javascript
