@@ -360,4 +360,17 @@ describe('replace', function () {
         expect(obj.root.a2).to.equal(obj.root.a2);
     });
 
+    it('should remove correctly sibling items in array', function () {
+        var obj = {b: [{a: 1},{a: 1},{a: 2},{a: 1}]};
+
+        q.replace({
+            source: obj,
+            query: {
+                a: 1
+            }
+        });
+
+        expect(obj.b.length).to.equal(1);
+        expect(obj.b[0].a).to.equal(2);
+    });
 });

@@ -14,6 +14,9 @@
         },
         regexp: function (val, rule) {
             return val === rule || rule.test(val);
+        },
+        callback: function (val, rule) {
+            return val === rule || rule.call(this, val);
         }
     };
 
@@ -80,7 +83,7 @@
                 validator = helpers.regexp;
             }
             else if (typeof value === 'function') {
-                validator = value;
+                validator = helpers.callback;
             }
 
             return {
@@ -140,16 +143,10 @@
             });
         }
 
-        var val;
-
         if (recursion !== false) {
-            for (var name in obj) {
-                if (!obj.hasOwnProperty(name)) continue;
-
-                val = obj[name];
-
+            each(obj, function (val, name) {
                 if (isObject(val) && val !== parent) {
-                    val = match({
+                    match({
                         parent: obj,
                         field: name,
                         path: add(path, name),
@@ -159,7 +156,7 @@
                         callback: callback
                     });
                 }
-            }
+            });
         }
 
         return list;
@@ -173,9 +170,11 @@
         var name;
 
         for (var i = 0, len = path.length; i < len; i++) {
+            if (!isObject(obj)) return;
+
             name = path[i];
 
-            if (name === '*') {
+            if (name === '*' && !has(obj, name)) {
                 var restPath = path.slice(i + 1);
 
                 if (restPath.length === 0) {
@@ -187,7 +186,7 @@
                 });
             }
 
-            if (!isObject(obj) || !has(obj, name)) return;
+            if (!has(obj, name)) return;
 
             obj = obj[name];
         }
@@ -251,10 +250,18 @@
         var res;
 
         if (isArray(obj)) {
-            for (var i = 0, len = obj.length; i < len; i++) {
+            for (var i = 0, len = obj.length; i < len;) {
                 res = cb(obj[i], i);
+                
                 if (typeof res !== 'undefined') {
                     return res;
+                }
+                
+                if (obj.length === len) {
+                    i++;
+                }
+                else {
+                    len = obj.length;
                 }
             }
         }
