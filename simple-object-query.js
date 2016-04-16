@@ -96,7 +96,8 @@
         match({
             parent: parent,
             source: obj,
-            exclude: ops.exclude ? ops.exclude.map(arrayQuery) : null,
+            exclude: ops.exclude,
+            include: ops.include,
             query: rules[0].path,
             recursion: ops.recursion,
             callback: function (item) {
@@ -117,20 +118,13 @@
             field = ops.field,
             obj = ops.source,
             query = ops.query,
-            path = ops.path,
+            path = ops.path || [],
             exclude = ops.exclude,
+            include = ops.include,
             recursion = ops.recursion,
             callback = ops.callback || function (item) {
                 list.push(item);
             };
-
-        if (!isArray(path)) {
-            path = [];
-        }
-
-        if (exclude && isParent(path, exclude)) {
-            return list;
-        }
 
         var res = get(obj, query);
 
@@ -143,21 +137,45 @@
             });
         }
 
-        if (recursion !== false) {
-            each(obj, function (val, name) {
-                if (isObject(val) && val !== parent) {
-                    match({
-                        parent: obj,
-                        field: name,
-                        path: add(path, name),
-                        exclude: exclude,
-                        source: val,
-                        query: query,
-                        callback: callback
-                    });
-                }
-            });
+        if (recursion === false) return list;
+
+        if (isArray(exclude)) {
+            exclude = function (item) {
+                return ops.exclude.indexOf(item.field) > -1;
+            };
         }
+
+        if (isArray(include)) {
+            include = function (item) {
+                return ops.include.indexOf(item.field) > -1;
+            };
+        }
+
+        var item = {
+            parent: parent,
+            path: path,
+            target: obj
+        };
+
+        each(obj, function (val, name) {
+            item.field = name;
+            
+            if (exclude && exclude(item)) return;
+            if (include && !include(item)) return;
+
+            if (!isObject(val) || val === parent) return;
+
+            match({
+                parent: obj,
+                field: name,
+                path: add(path, name),
+                exclude: exclude,
+                include: include,
+                source: val,
+                query: query,
+                callback: callback
+            });
+        });
 
         return list;
     }
@@ -297,31 +315,6 @@
 
     function has(obj, field) {
         return Object.prototype.hasOwnProperty.call(obj, field);
-    }
-
-    function isParent(path, fieldsList) {
-        var i, len, n, pos, fields, field, eq;
-
-        for (i = 0, len = fieldsList.length; i < len; i++) {
-            fields = fieldsList[i];
-            eq = true;
-            n = fields.length - 1;
-            pos = path.length - 1;
-
-            if (n > pos) continue;
-
-            for (; n >= 0; n--, pos--) {
-                field = fields[n];
-                if (field !== path[pos]) {
-                    eq = false;
-                    break;
-                }
-            }
-
-            if (eq) return eq;
-        }
-
-        return false;
     }
 
     function add(list, field) {

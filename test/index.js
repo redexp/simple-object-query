@@ -220,7 +220,6 @@ describe('search', function () {
         var obj = clone(origin);
 
         obj.root.a1.parent = obj.root;
-        obj.root.a1.$name.list = obj.root;
 
         var res = q.search({
             source: obj,
@@ -228,14 +227,70 @@ describe('search', function () {
                 'b.0.c': 1
             },
             exclude: [
-                'parent',
-                '$name.list'
+                'parent'
             ]
         });
 
         expect(res.length).to.equal(2);
         expect(res[0].target).to.equal(obj.root.a1);
         expect(res[1].target).to.equal(obj.root.a2);
+
+        obj.root.a1.$name.list = obj.root;
+        
+        res = q.search({
+            source: obj,
+            query: {
+                'b.0.c': 1
+            },
+            exclude: function (item) {
+                return (
+                    item.field === 'parent' ||
+                    (
+                        item.field === '$name' && item.path[item.path.length - 1] === 'a1' && item.target.$name.list
+                    )
+                );
+            }
+        });
+
+        expect(res.length).to.equal(2);
+        expect(res[0].target).to.equal(obj.root.a1);
+        expect(res[1].target).to.equal(obj.root.a2);
+    });
+
+    it('should include fields', function () {
+        var obj = clone(origin);
+
+        var num = 0;
+
+        q.search({
+            source: obj,
+            query: {
+                'b.0.c': 1
+            },
+            include: ['root', 'a2'],
+            callback: function (item) {
+                num++;
+            }
+        });
+
+        expect(num).to.equal(1);
+
+        num = 0;
+
+        q.search({
+            source: obj,
+            query: {
+                'b.0.c': 1
+            },
+            include: function (item) {
+                return item.field === 'root' || item.field === 'a2';
+            },
+            callback: function (item) {
+                num++;
+            }
+        });
+
+        expect(num).to.equal(1);
     });
 
     it('should filter by function', function () {
