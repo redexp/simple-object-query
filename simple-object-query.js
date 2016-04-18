@@ -67,7 +67,7 @@
     function search(ops) {
         var parent = ops.parent,
             obj = ops.source,
-            queries = ops.query,
+            queries = ops.query || {},
             list = [],
             callback = ops.callback || function (item) {
                 list.push(item);
@@ -93,23 +93,25 @@
             }
         });
 
-        match({
+        var zeroRules = rules.length === 0;
+
+        var res = match({
             parent: parent,
             source: obj,
             exclude: ops.exclude,
             include: ops.include,
-            query: rules[0].path,
+            query: zeroRules ? ['*'] : rules[0].path,
             recursion: ops.recursion,
             callback: function (item) {
-                var valid = rules.every(function (rule) {
+                var valid = zeroRules || rules.every(function (rule) {
                     return rule.validator(get(item.target, rule.path), rule.value);
                 });
 
-                if (valid) callback(item);
+                if (valid) return callback(item);
             }
         });
 
-        return list;
+        return ops.callback ? res : list;
     }
 
     function match(ops) {
@@ -129,12 +131,14 @@
         var res = get(obj, query);
 
         if (res !== undefined) {
-            callback({
+            res = callback({
                 parent: parent,
                 path: path,
                 field: field,
                 target: obj
             });
+            
+            if (res !== undefined) return res;
         }
 
         if (recursion === false) return list;
@@ -157,7 +161,7 @@
             target: obj
         };
 
-        each(obj, function (val, name) {
+        res = each(obj, function (val, name) {
             item.field = name;
             
             if (exclude && exclude(item)) return;
@@ -165,7 +169,7 @@
 
             if (!isObject(val) || val === parent) return;
 
-            match({
+            return match({
                 parent: obj,
                 field: name,
                 path: add(path, name),
@@ -177,7 +181,7 @@
             });
         });
 
-        return list;
+        return ops.callback ? res : list;
     }
 
     function get(obj, path) {
@@ -271,15 +275,15 @@
             for (var i = 0, len = obj.length; i < len;) {
                 res = cb(obj[i], i);
                 
-                if (typeof res !== 'undefined') {
+                if (res !== undefined) {
                     return res;
                 }
                 
-                if (obj.length === len) {
-                    i++;
+                if (obj.length < len) {
+                    len = obj.length;
                 }
                 else {
-                    len = obj.length;
+                    i++;
                 }
             }
         }
@@ -288,7 +292,7 @@
                 if (!obj.hasOwnProperty(field)) continue;
 
                 res = cb(obj[field], field);
-                if (typeof res !== 'undefined') {
+                if (res !== undefined) {
                     return res;
                 }
             }
@@ -326,7 +330,7 @@
     }
 
     function notUndefined(item) {
-        return typeof item !== 'undefined';
+        return item !== undefined;
     }
 
 }));

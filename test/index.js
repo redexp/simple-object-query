@@ -14,7 +14,7 @@ var src = {
     }
 };
 
-var obj = origin = {
+var origin = {
     root: {
         a1: {
             b: [
@@ -33,7 +33,8 @@ var obj = origin = {
             ]
         }
     }
-};
+},
+    obj = origin;
 
 function clone(val) {
     return JSON.parse(JSON.stringify(val));
@@ -309,6 +310,21 @@ describe('search', function () {
         expect(res.length).to.equal(2);
         expect(res[0].target).to.equal(obj.root.a1);
         expect(res[1].target).to.equal(obj.root.a2);
+    });
+
+    it('should stop when return non undefined', function () {
+        var obj = clone(origin);
+
+        var res = q.search({
+            source: obj,
+            callback: function (item) {
+                if (item.field === 'a1') {
+                    return item.target;
+                }
+            }
+        });
+
+        expect(res).to.equal(obj.root.a1);
     });
 
 });
