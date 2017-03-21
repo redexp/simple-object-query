@@ -130,6 +130,18 @@ describe('where', function () {
 
         expect(res.length).to.equal(0);
     });
+
+    it('should find by function', function () {
+        var data = [{item1: {item2: ['test1', 'test2']}}, {item1: {item2: ['test3', 'test4']}}, {item3: ['test1', 'test2']}];
+
+        var res = q.where(data, {
+            'item1.item2': function (arr) {
+                return Array.isArray(arr) && arr.indexOf('test3') > -1;
+            }
+        });
+
+        expect(res[0]).to.equal(data[1]);
+    });
 });
 
 describe('find', function () {

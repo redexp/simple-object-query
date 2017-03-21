@@ -60,15 +60,18 @@ var where = require('simple-object-query').where;
 
 where(source.data, {
     'item.name': /(select|group)/,
-    'item.type': 'number'
+    'item.type': 'number',
+    'item.options': function (value) {
+    	return typeof value === 'object';
+    }
 });
 /*
  [
    {
         item: {
             name: 'group',
+            type: 'number',
             options: {...},
-            type: 'number'
         }
     }
  ]
